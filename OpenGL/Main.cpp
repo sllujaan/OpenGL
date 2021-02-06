@@ -13,7 +13,6 @@
 
 
 
-
 glm::mat4 camera(float Translate, glm::vec2 const& Rotate)
 {
     glm::mat4 Projection = glm::perspective(glm::pi<float>() * 0.25f, 4.0f / 3.0f, 0.1f, 100.f);
@@ -23,6 +22,8 @@ glm::mat4 camera(float Translate, glm::vec2 const& Rotate)
     glm::mat4 Model = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f));
     return Projection * View * Model;
 }
+
+
 
 
 
@@ -170,6 +171,12 @@ int main(void) {
         0.0f,  0.5f
     };
 
+    float newPoints[] = {
+       -0.2f, -0.2f,
+        0.2f, -0.2f,
+        0.0f,  0.2f
+    };
+
     float points_colors[] = {
        1.0f,  0.0f,  0.0f,
        0.0f,  1.0f,  0.0f,
@@ -216,11 +223,13 @@ int main(void) {
         "#version 400\r\n"
         "out vec4 color;"
         "in vec3 fragmentColor;"
+        "uniform vec4 ourColor;"
         "void main() {"
-        "  color = vec4(fragmentColor, 1.0);"
+        "  color = ourColor;"
         "}";
 
     //"  frag_colour = vec4(1, 0.0, 0.0, 1.0);"
+    //"  color = vec4(fragmentColor, 1.0);"
 
     unsigned int shader = createShader(vertexShader, fragmentShader);
     
@@ -234,8 +243,12 @@ int main(void) {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
+        // update the uniform color
+        float timeValue = glfwGetTime();
+        float greenValue = sin(timeValue) / 2.0f + 0.5f;
+        int vertexColorLocation = glGetUniformLocation(shader, "ourColor");
+        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
-        
 
         // draw points 0-4 from the currently bound VAO with current in-use shader
         glDrawArrays(GL_TRIANGLES, 0, 3);
