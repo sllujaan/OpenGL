@@ -88,8 +88,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>GLEW_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\glm;$(SolutionDir)dependencies\GLFW\include;$(SolutionDir)dependencies\glad\include;$(SolutionDir)dependencies\GLEW\include</AdditionalIncludeDirectories>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\stb_image;$(SolutionDir)dependencies\glm;$(SolutionDir)dependencies\GLFW\include;$(SolutionDir)dependencies\glad\include;$(SolutionDir)dependencies\GLEW\include</AdditionalIncludeDirectories>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
@@ -126,8 +126,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>GLEW_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\glm;$(SolutionDir)dependencies\GLFW\include;$(SolutionDir)dependencies\glad\include;$(SolutionDir)dependencies\GLEW\include</AdditionalIncludeDirectories>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\stb_image;$(SolutionDir)dependencies\glm;$(SolutionDir)dependencies\GLFW\include;$(SolutionDir)dependencies\glad\include;$(SolutionDir)dependencies\GLEW\include</AdditionalIncludeDirectories>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
@@ -170,10 +170,22 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="vender\imgui\imgui.cpp" />
+    <ClCompile Include="vender\imgui\imgui_demo.cpp" />
+    <ClCompile Include="vender\imgui\imgui_draw.cpp" />
+    <ClCompile Include="vender\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="vender\imgui\imgui_widgets.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="Util.h" />
+    <ClInclude Include="vender\imgui\imconfig.h" />
+    <ClInclude Include="vender\imgui\imgui.h" />
+    <ClInclude Include="vender\imgui\imgui_impl_opengl3.h" />
+    <ClInclude Include="vender\imgui\imgui_internal.h" />
+    <ClInclude Include="vender\imgui\imstb_rectpack.h" />
+    <ClInclude Include="vender\imgui\imstb_textedit.h" />
+    <ClInclude Include="vender\imgui\imstb_truetype.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

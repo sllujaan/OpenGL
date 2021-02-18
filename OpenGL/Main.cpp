@@ -7,9 +7,17 @@
 #include <glm/ext/matrix_clip_space.hpp> // glm::perspective
 #include <glm/ext/scalar_constants.hpp> // glm::pi
 #include <glm/gtx/string_cast.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
+
+#include"vender/imgui/imgui.h"
+#include"vender/imgui/imgui_impl_opengl3.h"
 
 #include"Util.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 
 
 
@@ -73,69 +81,17 @@ static unsigned int createShader(std::string& vertexShader, std::string& fragmen
     return program;
 }
 
+float getColor(float color);
+float increaseColor(float color);
+float decreaseColor(float color);
 
 int main(void) {
 	
-
-    //glm::transpose(myMatrix);
-
-    glm::mat4 m4(1.0f); // construct identity matrix
-    m4[0];     // column zero
-
-    m4[0].x;          // same as m4[ 0 ][ 0 ]
-    m4[0].y = 2.0f;   // same as m4[ 0 ][ 1 ]
-    m4[0].z = 3.0f;   // same as m4[ 0 ][ 2 ]
-    m4[0].w = 4.0f;   // same as m4[ 0 ][ 3 ]
-
-    m4[1].x;          // same as m4[ 1 ][ 0 ]
-    m4[1].y = 2.0f;   // same as m4[ 1 ][ 1 ]
-    m4[1].z = 3.0f;   // same as m4[ 1 ][ 2 ]
-    m4[1].w = 4.0f;   // same as m4[ 1 ][ 3 ]
-
-    std::cout << glm::to_string(m4) << std::endl;
-
-    glm::vec3 v3(1.0f, 1.0f, 1.0f);
-
-    std::cout << glm::to_string(v3) << std::endl;
-
-    glm::translate(m4, v3);
-
-
-
-    std::cout << glm::to_string(glm::translate(m4, v3)) << std::endl;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     GLFWwindow* window;
 
     /* Initialize the library */
     if (!glfwInit())
         return -1;
-
-    
 
     /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
@@ -145,75 +101,169 @@ int main(void) {
         return -1;
     }
 
-    
-
-
-
-    //glfwSetErrorCallback(error_callback);
-
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
-     
-
+    glfwSwapInterval(1);
 
     if (glewInit() != GLEW_OK)
         std::cout << "GLEW_ERROR" << std::endl;
 
-    /*float points[] = {
-       0.0f,  0.5f,  0.0f,
-       0.5f, -0.5f,  0.0f,
-      -0.5f, -0.5f,  0.0f
-    };*/
 
-    float points[] = {
-       -0.5f, -0.5f,
-        0.5f, -0.5f,
-        0.0f,  0.5f
+    float vbo[] = {
+        //pink triangle 1
+         // positions           // colors
+        -0.5f, -0.5f,  0.0f,    1.0f, 0.0f, 1.0f, 1.0f,  //left vertex
+         0.5f, -0.5f,  0.0f,    1.0f, 0.0f, 1.0f, 1.0f,  //right vertex
+         0.0f,  0.5f,  0.0f,    1.0f, 0.0f, 1.0f, 1.0f,  //top vertex
+
+         //pink triangle 2
+         // positions           // colors
+        -0.5f, -0.5f,  0.05f,    1.0f, 0.0f, 1.0f, 1.0f,  //left vertex
+         0.5f, -0.5f,  0.05f,    1.0f, 0.0f, 1.0f, 1.0f,  //right vertex
+         0.0f,  0.5f,  0.05f,    1.0f, 0.0f, 1.0f, 1.0f,  //top vertex
+
+
+         // positions           // colors
+        -0.3f, -0.3f,  0.3f,    1.0f, 1.0f, 1.0f, 0.5f,
+         0.3f, -0.3f,  0.3f,    1.0f, 1.0f, 1.0f, 0.5f,
+         0.0f,  0.3f,  0.3f,    1.0f, 1.0f, 1.0f, 0.5f,
+
+         
+
+        //two triangles cover left side
+        // positions           // colors
+        -0.5f, -0.5f,  0.05f,   1.0f, 1.0f, 1.0f, 0.5f,
+         0.0f,  0.5f,  0.0f,    1.0f, 1.0f, 1.0f, 0.5f,
+         0.0f,  0.5f,  0.05f,   1.0f, 1.0f, 1.0f, 0.5f,
+
+         // positions           // colors
+        -0.5f, -0.5f,  0.0f,    1.0f, 1.0f, 1.0f, 0.5f,
+         0.0f,  0.5f,  0.0f,    1.0f, 1.0f, 1.0f, 0.5f,
+        -0.5f, -0.5f,  0.05f,   1.0f, 1.0f, 1.0f, 0.5f,
+         
+         //--------------------------
+
+         //two triangles cover right side
+        // positions           // colors
+         0.5f, -0.5f, 0.05f,    1.0f, 1.0f, 1.0f, 0.5f, //right vertex z
+         0.5f, -0.5f,  0.0f,    1.0f, 1.0f, 1.0f, 0.5f, //right vertex
+         0.0f,  0.5f,  0.0f,    1.0f, 1.0f, 1.0f, 0.5f, //top vertex
+
+         // positions           // colors
+         0.5f, -0.5f, 0.05f,    1.0f, 1.0f, 1.0f, 0.5f, //right vertex z
+         0.0f,  0.5f,  0.0f,    1.0f, 1.0f, 1.0f, 0.5f, //top vertex
+         0.0f,  0.5f,  0.05f,   1.0f, 1.0f, 1.0f, 0.5f, //top vertex z
+         //--------------------------
+
+
+         //two triangles cover bottom side
+        // positions           // colors
+        -0.5f, -0.5f,  0.0f,    1.0f, 1.0f, 1.0f, 0.5f,  //left vertex
+         0.5f, -0.5f,  0.0f,    1.0f, 1.0f, 1.0f, 0.5f,  //right vertex
+         0.5f, -0.5f,  0.05f,   1.0f, 1.0f, 1.0f, 0.5f,  //right vertex z
+
+         // positions           // colors
+         0.5f, -0.5f,  0.05f,  1.0f, 1.0f, 1.0f, 0.5f,      //right vertex z
+        -0.5f, -0.5f,  0.0f,   1.0f, 1.0f, 1.0f, 0.5f,  //left vertex
+        -0.5f, -0.5f,  0.05f,  1.0f, 1.0f, 1.0f, 0.5f,  //left vertex z
+         //--------------------------
+
+
+          // positions           // colors
+         -0.3f, -0.3f, -0.3f,    1.0f, 1.0f, 1.0f, 0.5f,
+          0.3f, -0.3f, -0.3f,    1.0f, 1.0f, 1.0f, 0.5f,
+          0.0f,  0.3f, -0.3f,    1.0f, 1.0f, 1.0f, 0.5f
+
     };
-
-    float newPoints[] = {
-       -0.2f, -0.2f,
-        0.2f, -0.2f,
-        0.0f,  0.2f
-    };
-
-    float points_colors[] = {
-       1.0f,  0.0f,  0.0f,
-       0.0f,  1.0f,  0.0f,
-       0.0f,  0.0f,  1.0f
-    };
-
+    
+    int bufferSize = (sizeof(vbo) / sizeof(vbo[0])) * sizeof(float);
 
     
-    /*points 1 ----------------*/
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+
+    /*triangle 1 ----------------*/
     GLuint points_vbo;
     glGenBuffers(1, &points_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
-    glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), points, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-
+    glBufferData(GL_ARRAY_BUFFER, bufferSize, vbo, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
 
-
-    /*colors -------------------*/
     GLuint points_colors_vbo;
     glGenBuffers(1, &points_colors_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, points_colors_vbo);
-    glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(float), points_colors, GL_STATIC_DRAW);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
+    glBufferData(GL_ARRAY_BUFFER, bufferSize, vbo, GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+
+    ///*triangle 2 ----------------*/
+    //GLuint points_vbo1;
+    //glGenBuffers(1, &points_vbo1);
+    //glBindBuffer(GL_ARRAY_BUFFER, points_vbo1);
+    //glBufferData(GL_ARRAY_BUFFER, bufferSize, vbo, GL_STATIC_DRAW);
+    //glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
+    //glEnableVertexAttribArray(2);
+
+
+    //GLuint points_colors_vbo1;
+    //glGenBuffers(1, &points_colors_vbo1);
+    //glBindBuffer(GL_ARRAY_BUFFER, points_colors_vbo1);
+    //glBufferData(GL_ARRAY_BUFFER, bufferSize, vbo, GL_STATIC_DRAW);
+    //glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
+    //glEnableVertexAttribArray(3);
+
+
+
+    //---------------------------------------Texture------------------------------------
+
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    // set the texture wrapping/filtering options (on the currently bound texture object)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+
+    // load and generate the texture
+    int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char* data = stbi_load("C:\\Users\\SALMAN-ALTAF\\Downloads\\img2.jpg", &width, &height, &nrChannels, 0);
+
+    if (data)
+    {
+        
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
+
+    //glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    //glEnableVertexAttribArray(1);
+
+    //---------------------------------------------------------------------------
+
 
 
 
     std::string vertexShader =
         "#version 400\r\n"
-        "layout(location = 0) in vec2 vp;"
-        "layout(location = 1) in vec3 vertexColor;"
-        "out vec3 fragmentColor;"
+        
+        "layout (location = 0) in vec3 vp;"
+        "layout(location = 1) in vec4 vertexColor;"
+        "out vec4 fragmentColor;"
+        "uniform mat4 trans;"
+
         "void main() {"
-        "   gl_Position = vec4(vp, 0.0, 1.0);"
+        "   gl_Position = trans * vec4(vp, 1.0);"
         "   fragmentColor = vertexColor;"
         "}";
     /*gl_Position.xyz = vertexPosition_modelspace;
@@ -222,56 +272,100 @@ int main(void) {
     std::string fragmentShader =
         "#version 400\r\n"
         "out vec4 color;"
-        "in vec3 fragmentColor;"
-        "uniform vec4 ourColor;"
+        "in vec4 fragmentColor;"
+        "uniform vec4 newColor;"
+
         "void main() {"
-        "  color = ourColor;"
+        "   color = fragmentColor;"
         "}";
 
     //"  frag_colour = vec4(1, 0.0, 0.0, 1.0);"
     //"  color = vec4(fragmentColor, 1.0);"
+    //"   color = vec4(fragmentColor, 1.0);"
 
     unsigned int shader = createShader(vertexShader, fragmentShader);
     
     glUseProgram(shader);
 
+    GLint vbLocation = glGetUniformLocation(shader, "trans");
+    GLint colorLocation = glGetUniformLocation(shader, "newColor");
+    //glUniform4f(colorLocation, 1.0f, 0.0f, 0.0f, 1.0f);
+    glm::mat4 trans(1.0f);
+    //trans = glm::rotate(trans, (float)45, glm::vec3(1.0f, 0.0f, 0.0f));
 
+    
+
+    float _color1 = 1.0f;
+    float _color2 = 0.0f;
+    glUniform4f(colorLocation, _color1, _color2, 0.0f, 1.0f);
+    glUniformMatrix4fv(vbLocation, 1, GL_FALSE, glm::value_ptr(trans));
+
+    float angle = 0.0f;
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
+
+        glEnable(GL_DEPTH_TEST);
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
-        // update the uniform color
-        float timeValue = glfwGetTime();
-        float greenValue = sin(timeValue) / 2.0f + 0.5f;
-        int vertexColorLocation = glGetUniformLocation(shader, "ourColor");
-        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
+        
+        angle += 0.001f;
+        if (angle > 0.10f) angle = 0.08f;
+        std::cout << angle << std::endl;
+        //transformation--------
+        trans = glm::rotate(trans, angle, glm::vec3(0.5f, 1.0f, 0.5f));
+        glUniformMatrix4fv(vbLocation, 1, GL_FALSE, glm::value_ptr(trans));
+        //-------------------
 
         // draw points 0-4 from the currently bound VAO with current in-use shader
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, 10 * 3);
 
 
         /* Poll for and process events */
         glfwPollEvents();
+
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
         
 
         /*slow down the loop*/
-        util::handleloopCount(200, false);
+        util::handleloopCount(50, false);
 
     }
+
+
 
     glfwTerminate();
     return 0;
 
+}
 
+float getColor(float color)
+{
+    static float prevColor = 1.1f;
+    if (color >= 0.0f && prevColor > color) {
+        prevColor = color;
+        std::cout << "color decreased" << std::endl;
+        return decreaseColor(color);
+    }
+    else { //color is less that 0.0f
+        prevColor = color;
+        return increaseColor(color);
+    }
 
-	/*std::cout << glfwInit() << std::endl;
+}
 
-	std::cin.get();*/
+float increaseColor(float color)
+{
+    color += 0.02f;
+    return color;
+}
+
+float decreaseColor(float color)
+{
+    color -= 0.02f;
+    return color;
 }
