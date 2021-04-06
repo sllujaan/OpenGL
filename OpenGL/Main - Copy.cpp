@@ -29,22 +29,6 @@ float CURR_TRANSLATE_X = 0.0f;
 float CURR_TRANSLATE_Y = 0.0f;
 float CURR_TRANSLATE_Z = 0.0f;
 
-glm::mat4 PROJECTION = glm::mat4(0.0f);
-glm::mat4 VIEW = glm::mat4(0.0f);
-glm::mat4 MODEL = glm::mat4(0.0f);
-float FOV = 25.0f;
-int ANIMATE_TRASLATE_ONKEY_W_S_A_D = false;
-
-//glm::vec3(0.0f, 0.0f, -10.0f), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0)
-//glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-//glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-//glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-//view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-
-glm::vec3 CAMERA_POS = glm::vec3(0.0f, 0.0f, -10.0f);
-glm::vec3 CAMERA_FRONT = glm::vec3(0.0f, 0.0f, 0.0f);
-glm::vec3 CAMERA_UP = glm::vec3(0.0f, 1.0f, 0.0f);
-
 enum Zoom
 {
     In,
@@ -60,31 +44,6 @@ typedef enum transDirection
 } rotateDir;
 
 
-struct APP_THREAD_INFO
-{
-    int MAIN_THREAD_SOULD_CLOSE = 0;
-    int ALL_CHILD_THREADS_SOULD_CLOSE = 0;
-};
-
-APP_THREAD_INFO _appThreadInfo;
-
-
-//glm::mat4 trans = glm::mat4(1.0f);
-//VIEW = glm::lookAt(CAMERA_POS, CAMERA_FRONT, CAMERA_UP);
-//trans = PROJECTION * VIEW * MODEL;
-//GLint vbLocation = glGetUniformLocation(SHADER_GLOBAL, "trans");
-//glUniformMatrix4fv(vbLocation, 1, GL_FALSE, glm::value_ptr(trans));
-
-template<class Fn, class... Args>
-struct ShaderAnimateStruct {
-    GLint vbLocation;
-    Fn glUinformFN;
-};
-
-
-GLFWwindow* GLF_WINDOW;
-
-void handle_key(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 
 glm::mat4 camera(float Translate, glm::vec2 const& Rotate)
@@ -100,36 +59,10 @@ glm::mat4 camera(float Translate, glm::vec2 const& Rotate)
 
 
 
-void animateShaderThread() {
-    
-    while (!_appThreadInfo.ALL_CHILD_THREADS_SOULD_CLOSE)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        std::cout << "animateShaderThread: " << _threadid << std::endl;
-
-        if (ANIMATE_TRASLATE_ONKEY_W_S_A_D) {
-            /*for (size_t i = 0; i < 20; i++)
-            {*/
-                //handle_key(GLF_WINDOW, 0, 0, 0, 0);
-                glm::mat4 trans = glm::mat4(1.0f);
-                VIEW = glm::lookAt(CAMERA_POS, CAMERA_FRONT, CAMERA_UP);
-                trans = PROJECTION * VIEW * MODEL;
-                GLint vbLocation = glGetUniformLocation(SHADER_GLOBAL, "trans");
-                //glUniformMatrix4fv(vbLocation, 1, GL_FALSE, glm::value_ptr(trans));
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            //}
-            ANIMATE_TRASLATE_ONKEY_W_S_A_D = 0;
-        }
-        
-    }
-    return;
-}
-
-
 
 void translateShader(transDirection dir) {
-    float translateX = 0.0f;
-    float translateY = 0.0f;
+    static float translateX = 0.0f;
+    static float translateY = 0.0f;
 
     switch (dir)
     {
@@ -152,20 +85,16 @@ void translateShader(transDirection dir) {
     //pass trans camera to the shader
     GLint vbLocation = glGetUniformLocation(SHADER_GLOBAL, "trans");
     glm::mat4 trans(1.0f);
-    glm::mat4 view(1.0f);
     float angle = 0.0f;
     //trans = camera(translate, glm::vec2(angle, angle));
-    
-    view = glm::translate(VIEW, glm::vec3(-translateX, -translateY, 0.0f));
-    VIEW = view;
-    trans = PROJECTION * MODEL * VIEW;
+    trans = glm::translate(glm::mat4(1.0f), glm::vec3(translateX, translateY, 0.0f));
     glUniformMatrix4fv(vbLocation, 1, GL_FALSE, glm::value_ptr(trans));
 }
 
 
 void rotateScene(rotateDir dir) {
-    float rotateX = 0.0f;
-    float rotateY = 0.0f;
+    static float rotateX = 0.0f;
+    static float rotateY = 0.0f;
 
     switch (dir)
     {
@@ -189,14 +118,10 @@ void rotateScene(rotateDir dir) {
     GLint vbLocation = glGetUniformLocation(SHADER_GLOBAL, "trans");
     glm::mat4 View(1.0f);
     float angle = 0.0f;
-    //View = camera(1.0f, glm::vec2(rotateX, rotateY));
+    View = camera(1.0f, glm::vec2(rotateX, rotateY));
     //View = glm::rotate(View, rotateX, glm::vec3(0.0f, 0.0f, 0.0f));
     //View = glm::rotate(View, rotateY, glm::vec3(0.0f, 0.0f, 0.0f));
-    //View = VIEW * View;
-    View = glm::rotate(VIEW, -rotateX, glm::vec3(1.0f, 0.0f, 0.0f));
-    View = glm::rotate(View, -rotateY, glm::vec3(0.0f, 1.0f, 0.0f));
-    VIEW = View;
-    View = PROJECTION * MODEL * VIEW;
+
     glUniformMatrix4fv(vbLocation, 1, GL_FALSE, glm::value_ptr(View));
 }
 
@@ -220,23 +145,20 @@ void translateShaderCamera() {
 
 void zoomInOutCamera(Zoom zoom) {
 
-    float translate = 0.0f;
+    static float translate = 0.0f;
     GLint vbLocation = glGetUniformLocation(SHADER_GLOBAL, "trans");
 
     if (zoom == Zoom::In) {
-        translate -= 0.5f;
+        translate -= 0.1f;
     }
     else if (zoom == Zoom::Out) {
-        translate += 0.5f;
+        translate += 0.1f;
     }
     //pass trans camera to the shader
     glm::mat4 trans(1.0f);
     float angle = 0.0f;
     //trans = camera(translate, glm::vec2(angle, angle));
-
-    glm::mat4 Projection = glm::perspective(glm::radians(FOV), 800.0f / 600.0f, 0.1f, 100.0f);
-    PROJECTION = Projection;
-    trans = PROJECTION * MODEL * VIEW;
+    trans = glm::translate(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, -2.0));
 
     
     glUniformMatrix4fv(vbLocation, 1, GL_FALSE, glm::value_ptr(trans));
@@ -245,13 +167,7 @@ void zoomInOutCamera(Zoom zoom) {
 
 bool firstMouse = false;
 float lastX = 400, lastY = 300;
-float yaw = 0.0f;
-float pitch = 0.0f;
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-
-
-    std::cout << std::this_thread::get_id() << std::endl;
-
     //std::cout << "mouse_callback" << std::endl;
     GLint vbLocation = glGetUniformLocation(SHADER_GLOBAL, "trans");
 
@@ -270,57 +186,21 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
         lastX = xpos;
         lastY = ypos;
 
-        float sensitivity = 1.5f;
+        float sensitivity = 0.01f;
         xoffset *= sensitivity;
         yoffset *= sensitivity;
 
-        yaw += xoffset;
-        pitch += yoffset;
-
-        if (pitch > 89.0f)
-            pitch = 89.0f;
-        if (pitch < -89.0f)
-            pitch = -89.0f;
-
-
-        glm::vec3 direction;
-        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-        direction.y = sin(glm::radians(pitch));
-        direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-        CAMERA_FRONT = glm::normalize(direction);
-
-
-        glm::mat4 trans = glm::mat4(1.0f);
-        VIEW = glm::lookAt(CAMERA_POS, CAMERA_FRONT, CAMERA_UP);
-        trans = PROJECTION * VIEW * MODEL;
-        glUniformMatrix4fv(vbLocation, 1, GL_FALSE, glm::value_ptr(trans));
+        std::cout << xoffset << ", " << yoffset << std::endl;
         
 
-        return;
-        //----------------------------------------------------------------
-        
-
-        //std::cout << xoffset << ", " << yoffset << std::endl;
-        //
-        //glm::mat4 view = glm::translate(VIEW, glm::vec3(xoffset, yoffset, 0.0f));
-        //VIEW = view;
-        //glm::mat4 trans = PROJECTION * MODEL * VIEW;
-        ////glm::mat4 View = glm::translate(glm::mat4(1.0f), glm::vec3(xoffset, yoffset, 0.0f));
-        //glUniformMatrix4fv(vbLocation, 1, GL_FALSE, glm::value_ptr(trans));
+        glm::mat4 View = glm::translate(glm::mat4(1.0f), glm::vec3(xoffset, yoffset, 0.0f));
+        glUniformMatrix4fv(vbLocation, 1, GL_FALSE, glm::value_ptr(View));
         
     }
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    //std::cout << _threadid << std::endl;
-
-    FOV -= (float)yoffset;
-    if (FOV < 1.0f)
-        FOV = 1.0f;
-    if (FOV > 45.0f)
-        FOV = 45.0f;
-
     std::cout << xoffset << std::endl;
     
     std::cout << yoffset << std::endl;
@@ -350,72 +230,54 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
 }
 
-void handle_key(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    float deltaTime = 0.0f;	// Time between current frame and last frame
-    float lastFrame = 0.0f; // Time of last frame
-
-    float currentFrame = glfwGetTime();
-    deltaTime = currentFrame - lastFrame;
-    lastFrame = currentFrame;
-
-    float cameraSpeed = 0.05f;
-    static size_t countPerKey = 0;
-
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        CAMERA_POS.y += cameraSpeed;
-        CAMERA_FRONT.y += cameraSpeed;
-        CAMERA_UP.y += CAMERA_FRONT.y;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        CAMERA_POS.y -= cameraSpeed;
-        CAMERA_FRONT.y -= cameraSpeed;
-        CAMERA_UP.y -= CAMERA_FRONT.y;
-
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        CAMERA_POS.x += cameraSpeed;
-        CAMERA_FRONT.x += cameraSpeed;
-        //CAMERA_UP.x -= cameraSpeed;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        CAMERA_POS.x -= cameraSpeed;
-        CAMERA_FRONT.x -= cameraSpeed;
-        //CAMERA_UP.x -= cameraSpeed;
-    }
-
-
-}
-
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    handle_key(window, 0, 0, 0, 0);
-    
-    //GLF_WINDOW = window;
-    //ANIMATE_TRASLATE_ONKEY_W_S_A_D = 1;
-    float fov = 30.0f;
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        std::cout << "key up" << std::endl;
-        yaw += 10.0f;
-        //pitch += 0.1f;
-        glm::vec3 direction;
-        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-        direction.y = sin(glm::radians(pitch));
-        direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-        CAMERA_FRONT = glm::normalize(direction);
+    if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        std::cout << "your presssed a key" << std::endl;
+        //translateShader();
+        //translateShaderCamera();
+        translateShader(transDirection::up);
     }
 
-    glm::mat4 trans = glm::mat4(1.0f);
-    VIEW = glm::lookAt(CAMERA_POS, CAMERA_FRONT, CAMERA_UP);
-    trans = PROJECTION * VIEW * MODEL;
-    GLint vbLocation = glGetUniformLocation(SHADER_GLOBAL, "trans");
-    glUniformMatrix4fv(vbLocation, 1, GL_FALSE, glm::value_ptr(trans));
+    if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        std::cout << "your presssed a key" << std::endl;
+        //translateShader();
+        //translateShaderCamera();
+        translateShader(transDirection::down);
+    }
 
-  
+    if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        std::cout << "your presssed a key" << std::endl;
+        //translateShader();
+        //translateShaderCamera();
+        translateShader(transDirection::left);
+    }
+
+    if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        std::cout << "your presssed a key" << std::endl;
+        //translateShader();
+        //translateShaderCamera();
+        translateShader(transDirection::right);
+    }
+
+    if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        std::cout << "your presssed key up" << std::endl;
+        rotateScene(rotateDir::up);
+    }
+    if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        std::cout << "your presssed key up" << std::endl;
+        rotateScene(rotateDir::down);
+    }
+    if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        std::cout << "your presssed key up" << std::endl;
+        rotateScene(rotateDir::left);
+    }
+    if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        std::cout << "your presssed key up" << std::endl;
+        rotateScene(rotateDir::right);
+    }
+
 }
 
 
@@ -484,7 +346,6 @@ errno_t generateCirclePoints(std::vector<glm::vec3>& vbPoints) {
 }
 
 
-
 int main(void) {
 
     GLFWwindow* window;
@@ -512,29 +373,16 @@ int main(void) {
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
 
-    std::cout << "_threadid main: " <<_threadid << std::endl;
-    //thread
-    std::thread th1(animateShaderThread);
-
-    std::cout << std::this_thread::get_id() << std::endl;
-
     if (glewInit() != GLEW_OK)
         std::cout << "GLEW_ERROR" << std::endl;
 
 
     float vbo[] = {
         // positions            //color                //normals
-       -1.2f, -1.1f,  1.0f,      1.0f, 0.0f, 0.0f,     -1.2f, -1.2f, -1.0f,   //left bottom
-       -1.2f,  1.1f,  1.0f,      1.0f, 1.0f, 0.0f,     -1.2f,  1.2f, -1.0f,   //left top
-        1.2f,  1.1f,  1.0f,      1.0f, 1.0f, 0.0f,      1.2f,  1.2f, -1.0f,   //right top
-        1.2f, -1.1f,  1.0f,      1.0f, 1.0f, 0.0f,      1.2f, -1.2f, -1.0f,   //right bottom
-
-        // positions            //color                //normals
-       -0.2f, -0.2f, -1.0f,      1.0f, 0.0f, 1.0f,     -1.2f, -1.2f, -1.0f,   //left bottom
-       -0.2f,  0.2f, -1.0f,      1.0f, 0.0f, 0.0f,     -1.2f,  1.2f, -1.0f,   //left top
-        0.2f,  0.2f, -1.0f,      1.0f, 0.0f, 0.0f,      1.2f,  1.2f, -1.0f,   //right top
-        0.2f, -0.2f, -1.0f,      1.0f, 0.0f, 0.0f,      1.2f, -1.2f, -1.0f,   //right bottom
-
+       -0.2f, -0.2f,  0.0f,      1.0f, 1.0f, 0.0f,     -0.2f, -0.2f, -1.0f,   //left bottom
+       -0.2f,  0.2f,  0.0f,      1.0f, 1.0f, 0.0f,     -0.2f,  0.2f, -1.0f,   //left top
+        0.2f,  0.2f,  0.0f,      1.0f, 1.0f, 0.0f,      0.2f,  0.2f, -1.0f,   //right top
+        0.2f, -0.2f,  0.0f,      1.0f, 1.0f, 0.0f,      0.2f, -0.2f, -1.0f,   //right bottom
     };
 
 
@@ -625,7 +473,6 @@ int main(void) {
     glEnableVertexAttribArray(3);*/
 
 
-
     std::string vertexShader =
         "#version 400\r\n"
 
@@ -640,12 +487,12 @@ int main(void) {
         "out vec3 Normal;"
 
         "uniform mat4 trans;"
-        "uniform mat4 lightSpaceMatrix;"
+        ""
 
         "void main() {"
         "   vec3 offsets[2] = {vec3(0.5f, 0.5f, 0.5f), vec3(-0.5f,  0.5f, 0.5f)};"
-        //"   vec3 offset = offsets[gl_InstanceID];"
-        "   gl_Position = trans * vec4(vp, 1.0);"
+        "   vec3 offset = offsets[gl_InstanceID];"
+        "   gl_Position = trans * vec4(vp + offset, 1.0);"
         "   "
         "   fragmentColor = vertexColor;"
         "   Normal = aNormal;"
@@ -677,8 +524,8 @@ int main(void) {
         "void main() {"
         "   vec3 lightColor = vec3(1.0, 1.0, 0.0);"
         "   vec3 objectColor = fragmentColor;"
-        "   vec3 lightPos = vec3(0.0, 0.0, -100.0);"
-        "   vec3 viewPos = vec3(1.3, 1.3, -100.0);"
+        "   vec3 lightPos = vec3(0.0, 0.0, -10.0);"
+        "   vec3 viewPos = vec3(0.0, 0.0, 0.0);"
         "   float ambientStrength = 0.1;"
         "   vec3 ambient = ambientStrength * lightColor;"
         "   vec3 norm = normalize(Normal);"
@@ -691,12 +538,12 @@ int main(void) {
         "   vec3 viewDir = normalize(viewPos - FragPos);"
         "   vec3 reflectDir = reflect(-lightDir, norm);"
         
-        "   float spec = pow(max(dot(viewDir, reflectDir), 0.0), 200);"
+        "   float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);"
         "   vec3 specular = specularStrength * spec * lightColor;"
 
         "   vec3 result = (ambient + diffuse + specular) * objectColor;"
-        ""
-        "   color = vec4(fragmentColor, 1.0f);"
+
+        "   color = vec4(result, 1.0f);"
         "}";
 
     //"  frag_colour = vec4(1, 0.0, 0.0, 1.0);"
@@ -715,35 +562,9 @@ int main(void) {
     glm::mat4 trans(1.0f);
     float angle = 0.0f;
     //trans = camera(3.0f, glm::vec2(angle, angle));
-
-    //trans = camera(10.0f, glm::vec2(1.0f, 0.0f));
-    float const Translate = 10.0f;
-    //glm::mat4 Projection = glm::perspective(glm::pi<float>() * 0.25f, 4.0f / 3.0f, 0.1f, 100.f);
-    glm::mat4 Projection = glm::perspective(glm::radians(FOV), 800.0f / 600.0f, 0.1f, 100.0f);
-    //float near_plane = 1.0f, far_plane = 100.0f;
-    //glm::mat4 Projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-    
-    
-    glm::mat4 View = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -Translate));
-    View = glm::rotate(View, glm::pi<float>() * 0.25f, glm::vec3(1.0f, 0.0f, 0.0f));
-    View = glm::rotate(View, glm::pi<float>() * 0.25f, glm::vec3(0.0f, 1.0f, 0.0f));
-    View = glm::rotate(View, glm::pi<float>() * 0.25f, glm::vec3(0.0f, 0.0f, 1.0f));
-    
-    //View = glm::lookAt(glm::vec3(0.0f, 0.0f, -10.0f), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
-
-    glm::mat4 Model = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
-    View = glm::lookAt(CAMERA_POS, CAMERA_FRONT, CAMERA_UP);
-    MODEL = Model;
-    VIEW = View;
-    PROJECTION = Projection;
-    trans = Projection * View * Model;
     glUniformMatrix4fv(vbLocation, 1, GL_FALSE, glm::value_ptr(trans));
     
-    
 
-
-    /*-----------------------shadow texture-------------------------------*/
-    //---------------------------------------------------------------------
 
 
     glm::vec3 cubePositions[] = {
@@ -774,9 +595,10 @@ int main(void) {
     float camZ = cos(glfwGetTime()) * radius;
     glm::mat4 view;
     view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+
     //glUniformMatrix4fv(vbLocation, 1, GL_FALSE, glm::value_ptr(view));
-    // `T` is not limited by any constraints.
-    
+
+
     //--------------------------------
 
     //instancing
@@ -788,7 +610,7 @@ int main(void) {
     {
 
         glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
+        glDepthFunc(GL_ALWAYS);
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -803,23 +625,11 @@ int main(void) {
         //-------------------
 
         // draw points 0-4 from the currently bound VAO with current in-use shader
-        //glDrawArrays(GL_QUADS, 0, 3 * 4);
+        glDrawArrays(GL_QUADS, 0, 3 * 4);
 
-        //glDrawArraysInstanced(GL_QUADS, 0, 4, 2);
-        
-        //camera loot at---------------------
-        //const float radius = 10.0f;
-        //float camX = sin(glfwGetTime()) * radius;
-        //float camZ = cos(glfwGetTime()) * radius;
-        //glm::mat4 view;
-        //View = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
-        ////View = glm::lookAt(glm::vec3(0.0f, 0.0f, -10.0f), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
-        //VIEW = View;
-        //trans = PROJECTION * VIEW * MODEL;
-        //glUniformMatrix4fv(vbLocation, 1, GL_FALSE, glm::value_ptr(trans));
-        //-------------------------------
+        glDrawArraysInstanced(GL_QUADS, 0, 4, 2);
 
-        glDrawArrays(GL_QUADS, 0, 2 * 4);
+        //glDrawArrays(GL_QUADS, 0, 1 * 4);
         
 
 
@@ -837,9 +647,7 @@ int main(void) {
     }
 
 
-    //close all child thread
-    _appThreadInfo.ALL_CHILD_THREADS_SOULD_CLOSE = 1;
-    th1.join();
+
     glfwTerminate();
     return 0;
 
